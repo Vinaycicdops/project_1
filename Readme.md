@@ -79,7 +79,7 @@ Disk/PVC Full	                    Triggers if any service's storage is >90%.
 
 day 1
 # 1. Replace your old flat files with this new folder structure
-# 2. Port-forward MinIO and seed data:
+# 2. Port-forward MinIO and seed data:ss
 kubectl port-forward -n kubeflow svc/minio-service 9000:9000 &
 python training/generate_data.py
 python seed_minio.py
