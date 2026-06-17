@@ -50,4 +50,3 @@ stringData:
         repeat_interval: 30m
     templates:
     - /etc/alertmanager/config/*.tmpl
-  EOF
