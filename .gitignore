@@ -22,6 +22,8 @@ models/
 secrets.yaml
 *secret*.yaml
 
+graphify-out/cache
+
 # Kubeconfig
 *.kubeconfig
 kubeconfig
