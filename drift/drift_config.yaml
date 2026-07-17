@@ -136,7 +136,7 @@ alerting:
 
   # Only trigger retraining if drift score is above this
   # (avoid retraining on tiny, insignificant drift)
-  min_drift_score_for_retraining: 0.4
+  min_drift_score_for_retraining: 0.3
 
   # Don't retrain more than once per this many hours
   # (prevents runaway retraining loops)

@@ -146,22 +146,19 @@ class IsolationForestDetector:
         features = REGISTRY.feature_names
         X = self.scaler.transform(snapshot_df[features])
 
-        raw_pred = self.model.predict(X)[0]           # -1 (anomaly) or 1 (normal)
         score    = float(self.model.score_samples(X)[0])  # continuous score
 
-        status = "ANOMALY" if raw_pred == -1 else "NORMAL"
+        status = "ANOMALY" if score < self.threshold_score else "NORMAL"
 
-        # ── Severity [0, 1] ───────────────────────────────────────
-        # At the threshold: severity = 0.5
-        # score much more negative than threshold: severity → 1.0
-        score_range = (
-                self.training_stats["score_mean"] - self.training_stats["score_min"]
-        )
-        if score_range > 0 and status == "ANOMALY":
-            severity = float(np.clip(
-                (self.threshold_score - score) / score_range,
-                0.0, 1.0
-            ))
+        score_range = self.threshold_score - self.training_stats["score_min"]
+        if status == "ANOMALY":
+            if score_range > 0:
+                severity = float(np.clip(
+                    (self.threshold_score - score) / score_range,
+                    0.0, 1.0
+                ))
+            else:
+                severity = 1.0
         else:
             severity = 0.0
 

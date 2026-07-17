@@ -99,7 +99,7 @@ start_window() {
   # Capture the exit status of the first command in pipeline via PIPESTATUS.
   # If it failed (exit code != 0) and was not stopped by user (exit code != 130 or 143), wait for user keypress.
   local wsl_cmd="cd '$SCRIPT_DIR' && $cmd 2>&1 | tee '$logfile'; status=\${PIPESTATUS[0]}; [ \$status -eq 0 ] || [ \$status -eq 130 ] || [ \$status -eq 143 ] || { echo 'Process failed with exit code \$status'; read -p 'Press Enter to close...'; }"
-  cmd.exe /c start wsl.exe -e bash -c "$wsl_cmd" 2>/dev/null
+  cmd.exe /c start wsl.exe -e bash -c "$wsl_cmd" 2>/dev/null &
 }
 
 # ── cleanup on exit ───────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ cleanup() {
   rm -f "$PID_FILE"
   echo -e "${GREEN}All services stopped.${RESET}"
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT INT TERM #run on ctrl + c
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
@@ -191,24 +191,42 @@ echo ""
 log "All infrastructure tunnels are UP. Starting application services..."
 echo ""
 
-# ─────────────────────────────────────────────────────────────────────────────
-banner "── [5/7] AIOps Ensemble daemon (Ensemble_engine.py --mode run) → :8000"
-# ─────────────────────────────────────────────────────────────────────────────
-cd "$SCRIPT_DIR"
-start_bg "aiops-daemon" "$MAGENTA" \
-  "$VENV" Ensemble_engine.py --mode run
-wait_for_port "AIOps metrics exporter" 8000 60
+# # ─────────────────────────────────────────────────────────────────────────────
+# banner "── [5/7] AIOps Ensemble daemon (Ensemble_engine.py --mode run) → :8000"
+# # ─────────────────────────────────────────────────────────────────────────────
+# start_window "aiops-daemon" \
+#   "$VENV Ensemble_engine.py --mode train && $VENV Ensemble_engine.py --mode run"
+# wait_for_port "AIOps metrics exporter" 8000 60
+
+# # ─────────────────────────────────────────────────────────────────────────────
+# banner "── [6/7] Drift Trigger webhook (drift_trigger.py) → :8766"
+# # ─────────────────────────────────────────────────────────────────────────────
+# cd "$SCRIPT_DIR/drift"
+# start_bg "drift-trigger" "$BLUE" \
+#   "$VENV" -m uvicorn drift_trigger:app --host 0.0.0.0 --port 8766
+# wait_for_port "Drift Trigger webhook" 8766 30
+
+# # ─────────────────────────────────────────────────────────────────────────────
+# banner "── [7/7] Drift Observability server (drit_server.py) → :8765"
+# # ─────────────────────────────────────────────────────────────────────────────
+# cd "$SCRIPT_DIR/drift"
+# start_bg "drift-server" "$YELLOW" \
+#   "$VENV" drit_server.py
+# wait_for_port "Drift server" 8765 30
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}${BOLD}╔════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${GREEN}${BOLD}║   ✅  INFRASTRUCTURE & AIOPS ENGINE RUNNING               ║${RESET}"
+echo -e "${GREEN}${BOLD}║   ✅  INFRASTRUCTURE, AIOPS & MLOPS RUNNING               ║${RESET}"
 echo -e "${GREEN}${BOLD}╠════════════════════════════════════════════════════════════╣${RESET}"
 echo -e "${GREEN}${BOLD}║  Prometheus      →  http://localhost:9090                 ║${RESET}"
 echo -e "${GREEN}${BOLD}║  AlertManager    →  http://localhost:9093                 ║${RESET}"
 echo -e "${GREEN}${BOLD}║  MinIO           →  http://localhost:9000                 ║${RESET}"
 echo -e "${GREEN}${BOLD}║  Kubeflow UI     →  http://localhost:8080                 ║${RESET}"
 echo -e "${GREEN}${BOLD}║  AIOps Metrics   →  http://localhost:8000/metrics         ║${RESET}"
+echo -e "${GREEN}${BOLD}║  Drift Server    →  http://localhost:8765/metrics         ║${RESET}"
+echo -e "${GREEN}${BOLD}║  Drift Trigger   →  http://localhost:8766/health          ║${RESET}"
 echo -e "${GREEN}${BOLD}╠════════════════════════════════════════════════════════════╣${RESET}"
 echo -e "${GREEN}${BOLD}║  Logs →  .logs/   │  Press Ctrl+C to stop all            ║${RESET}"
 echo -e "${GREEN}${BOLD}╚════════════════════════════════════════════════════════════╝${RESET}"
@@ -223,7 +241,9 @@ tail -f \
   "$LOG_DIR/alertmanager-pf.log" \
   "$LOG_DIR/minio-pf.log" \
   "$LOG_DIR/kfp-ui-pf.log" \
-  "$LOG_DIR/aiops-daemon.log" &
+  "$LOG_DIR/aiops-daemon.log" \
+  "$LOG_DIR/drift-trigger.log" \
+  "$LOG_DIR/drift-server.log" &
 
 TAIL_PID=$!
 save_pid "log-tail" "$TAIL_PID"

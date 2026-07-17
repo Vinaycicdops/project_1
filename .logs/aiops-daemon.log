@@ -1,0 +1,130 @@
+/home/crysis/project_1/.venv/lib/python3.12/site-packages/torch/cuda/__init__.py:180: UserWarning: CUDA initialization: The NVIDIA driver on your system is too old (found version 12060). Please update your GPU driver by downloading and installing a new version from the URL: http://www.nvidia.com/Download/index.aspx Alternatively, go to: https://pytorch.org to install a PyTorch version that has been compiled with your version of the CUDA driver. (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:119.)
+  return torch._C._cuda_getDeviceCount() > 0
+MetricRegistry: 8 metrics, 4 layers
+
+─────────────────────────────────────────────────────────────────
+  METRIC REGISTRY  (8 recording rules)
+─────────────────────────────────────────────────────────────────
+
+  [NODE]
+    aiops:node_cpu_pct                        percent         spike=bad
+    aiops:node_mem_available_ratio            ratio           drop=bad
+
+  [CONTAINER]
+    aiops:container_mem_bytes                 bytes           spike=bad
+
+  [WORKLOAD]
+    aiops:pod_restart_rate                    count           spike=bad
+    aiops:pods_not_running                    count           spike=bad
+    aiops:deployment_unavailable_ratio        ratio           spike=bad
+
+  [NETWORK]
+    aiops:net_receive_bytes_rate              bytes_per_sec   spike=bad
+    aiops:net_transmit_bytes_rate             bytes_per_sec   spike=bad
+─────────────────────────────────────────────────────────────────
+
+📂 IsolationForest loaded ← models/iforest_detector.joblib
+📂 LSTM loaded ← models/lstm_detector.pt
+📡 Metrics → http://localhost:8000/metrics
+
+🚀 Ensemble AIops Engine — LIVE
+   Metrics   : 8
+   Poll      : 30s
+   Cooldown  : 120s
+   LSTM warmup: 10 polls = 300s
+
+📊 Drift detector loaded ← models/drift_reference.json
+  Stabilizing — skipping first 2 polls...
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  DEBUG: voting=majority n_anomaly=1 n_total=1 verdict=ANOMALY sev=1.0
+[2026-07-16 07:57:20]  Ensemble: 🚨 ANOMALY       IF: 🚨 ANOMALY   LSTM: ⏳ WARMING       Sev: 1.00  PSI: 0.000
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+🚨 ENSEMBLE ANOMALY ALERT
+   Severity  : [████████████████████] 100%
+   IF culprit: aiops:net_receive_bytes_rate
+   ⚠️  AlertManager unreachable — is port-forward running?
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  DEBUG: voting=majority n_anomaly=1 n_total=1 verdict=ANOMALY sev=1.0
+[2026-07-16 07:57:50]  Ensemble: 🚨 ANOMALY       IF: 🚨 ANOMALY   LSTM: ⏳ WARMING       Sev: 1.00  PSI: 0.000
+  🤫 Alert muted — 89s cooldown remaining
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  DEBUG: voting=majority n_anomaly=1 n_total=1 verdict=ANOMALY sev=1.0
+[2026-07-16 07:58:20]  Ensemble: 🚨 ANOMALY       IF: 🚨 ANOMALY   LSTM: ⏳ WARMING       Sev: 1.00  PSI: 0.000
+  🤫 Alert muted — 59s cooldown remaining
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  DEBUG: voting=majority n_anomaly=1 n_total=1 verdict=ANOMALY sev=1.0
+[2026-07-16 07:58:51]  Ensemble: 🚨 ANOMALY       IF: 🚨 ANOMALY   LSTM: ⏳ WARMING       Sev: 1.00  PSI: 0.000
+  🤫 Alert muted — 29s cooldown remaining
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+  Cannot reach Prometheus at http://localhost:9090
+  Run: kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090

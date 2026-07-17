@@ -60,13 +60,9 @@ import pandas as pd
 import yaml
 from botocore.exceptions import ClientError
 
-from evidently.report import Report
-from evidently.metric_preset import DataDriftPreset
-from evidently.metrics import (
-    DatasetDriftMetric,
-    ColumnDriftMetric,
-)
-from evidently import ColumnMapping
+from evidently.legacy.report import Report
+from evidently.legacy.metric_preset import DataDriftPreset
+from evidently.legacy.pipeline.column_mapping import ColumnMapping
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -202,12 +198,12 @@ class DriftDetector:
         self.minio = MinIOClient(self.cfg)
 
         # Feature names from config (in order)
-        self.feature_names = [
-                                 f["name"] for f in self.cfg["detection"]["features"]
-                                 if "features" in self.cfg.get("data_drift", {})
-                             ] or [
-                                 f["name"] for f in self.cfg["data_drift"]["features"]
-                             ]
+        if "features" in self.cfg.get("data_drift", {}):
+            self.feature_names = [f["name"] for f in self.cfg["data_drift"]["features"]]
+        elif "features" in self.cfg.get("detection", {}):
+            self.feature_names = [f["name"] for f in self.cfg["detection"]["features"]]
+        else:
+            self.feature_names = []
 
         self.p_threshold = self.cfg["data_drift"]["p_value_threshold"]
         self.dataset_threshold = self.cfg["data_drift"]["dataset_drift_threshold"]
@@ -332,6 +328,7 @@ class DriftDetector:
                     # stattest: 'ks' = Kolmogorov-Smirnov
                     # This is the standard test for numerical distributions
                     stattest="ks",
+                    stattest_threshold=self.p_threshold,
                     # drift_share: fraction of drifted features to call
                     # dataset drifted
                     drift_share=self.dataset_threshold,

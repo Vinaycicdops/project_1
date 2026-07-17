@@ -108,9 +108,48 @@ def _trigger_kfp_retraining(reason: str, drift_score: float) -> dict:
         run_name = f"{RUN_PREFIX}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
         log.info(f"Creating run: {run_name}")
 
-        run = client.create_run_from_pipeline_id(
+        # Find or create experiment (required by KFP v2 run_pipeline)
+        experiment_id = None
+        try:
+            exp = client.get_experiment(experiment_name="Default")
+            experiment_id = exp.experiment_id
+        except Exception:
+            try:
+                exps = client.list_experiments(page_size=10)
+                if exps.experiments:
+                    experiment_id = exps.experiments[0].experiment_id
+            except Exception:
+                pass
+        
+        if not experiment_id:
+            try:
+                exp = client.create_experiment(name="Default")
+                experiment_id = exp.experiment_id
+            except Exception as e:
+                log.error(f"Failed to create/get experiment: {e}")
+                return {"status": "error", "message": f"Experiment creation failed: {e}"}
+
+        # Retrieve the latest pipeline version ID (required by KFP v2 run_pipeline when template is used)
+        try:
+            versions = client.list_pipeline_versions(pipeline_id=pipeline_id)
+            if not versions.pipeline_versions:
+                log.error(f"No versions found for pipeline '{PIPELINE_NAME}'.")
+                return {
+                    "status": "error",
+                    "message": f"No versions found for pipeline '{PIPELINE_NAME}'",
+                }
+            latest_version = max(versions.pipeline_versions, key=lambda x: str(x.created_at or ""))
+            version_id = latest_version.pipeline_version_id
+            log.info(f"Using pipeline version: {latest_version.display_name} (ID: {version_id})")
+        except Exception as e:
+            log.error(f"Failed to list pipeline versions: {e}")
+            return {"status": "error", "message": f"Failed to list pipeline versions: {e}"}
+
+        run = client.run_pipeline(
+            experiment_id=experiment_id,
+            job_name=run_name,
             pipeline_id=pipeline_id,
-            run_name=run_name,
+            version_id=version_id,
             params={},
         )
 

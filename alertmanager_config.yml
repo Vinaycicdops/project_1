@@ -7,7 +7,7 @@ stringData:
   alertmanager.yaml: |
     global:
       resolve_timeout: 5m
-      slack_api_url: 'SLACK_WEBHOOK'
+      slack_api_url: 'slack api'
     inhibit_rules:
     - equal: [namespace, alertname]
       source_matchers: [severity = critical]

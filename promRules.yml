@@ -31,8 +31,9 @@ spec:
         - record: aiops:container_mem_bytes
           expr: >
             max(container_memory_usage_bytes{
-              namespace="kubeflow", container!="", container!="POD", container!="mysql", container!="minio"
+              namespace="kubeflow", pod!="", pod!~"mysql.*|minio.*|churn-train-pipeline.*|drift-triggered-retrain.*"
             })
+
 
         - record: aiops:container_cpu_throttle_ratio
           expr: >
@@ -56,7 +57,7 @@ spec:
             sum(rate(kube_pod_container_status_restarts_total{namespace="kubeflow"}[15m]))
 
         - record: aiops:pods_not_running
-          expr: count(kube_pod_status_phase{phase!~"Running|Succeeded|Succeeded|Completed|Unknown"} == 1) or vector(0)
+          expr: count(kube_pod_status_phase{namespace="kubeflow", pod!~"churn-train-pipeline.*|drift-triggered-retrain.*", phase!~"Running|Succeeded|Completed|Unknown"} == 1) or vector(0)
 
         - record: aiops:deployment_unavailable_ratio
           expr: >

@@ -41,7 +41,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import yaml
 
-from drift_detector import DriftDetector, DriftCheckResult
+from drifft_detector import DriftDetector, DriftCheckResult
 
 logging.basicConfig(
     level=logging.INFO,

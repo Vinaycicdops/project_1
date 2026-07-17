@@ -1,0 +1,56 @@
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 44, in <module>
+    from drift_detector import DriftDetector, DriftCheckResult
+ModuleNotFoundError: No module named 'drift_detector'
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 44, in <module>
+    from drifft_detector import DriftDetector, DriftCheckResult
+  File "/home/crysis/project_1/drift/drifft_detector.py", line 63, in <module>
+    from evidently.report import Report
+ModuleNotFoundError: No module named 'evidently'
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 44, in <module>
+    from drifft_detector import DriftDetector, DriftCheckResult
+  File "/home/crysis/project_1/drift/drifft_detector.py", line 63, in <module>
+    from evidently.report import Report
+ModuleNotFoundError: No module named 'evidently.report'
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 277, in <module>
+    main()
+  File "/home/crysis/project_1/drift/drit_server.py", line 246, in main
+    detector = DriftDetector("drift_config.yaml")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/crysis/project_1/drift/drifft_detector.py", line 202, in __init__
+    f["name"] for f in self.cfg["detection"]["features"]
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'features'
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 277, in <module>
+    main()
+  File "/home/crysis/project_1/drift/drit_server.py", line 246, in main
+    detector = DriftDetector("drift_config.yaml")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/crysis/project_1/drift/drifft_detector.py", line 202, in __init__
+    f["name"] for f in self.cfg["detection"]["features"]
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'features'
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 277, in <module>
+    main()
+  File "/home/crysis/project_1/drift/drit_server.py", line 246, in main
+    detector = DriftDetector("drift_config.yaml")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/crysis/project_1/drift/drifft_detector.py", line 202, in __init__
+    f["name"] for f in self.cfg["detection"]["features"]
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'features'
+Traceback (most recent call last):
+  File "/home/crysis/project_1/drift/drit_server.py", line 277, in <module>
+    main()
+  File "/home/crysis/project_1/drift/drit_server.py", line 246, in main
+    detector = DriftDetector("drift_config.yaml")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/crysis/project_1/drift/drifft_detector.py", line 202, in __init__
+    f["name"] for f in self.cfg["detection"]["features"]
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'features'

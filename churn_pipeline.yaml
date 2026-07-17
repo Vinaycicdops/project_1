@@ -1,0 +1,534 @@
+# PIPELINE DEFINITION
+# Name: churn-train-pipeline
+# Description: Generate → Validate → Train → Evaluate → Promote → Save Reference
+components:
+  comp-condition-1:
+    dag:
+      tasks:
+        condition-2:
+          componentRef:
+            name: comp-condition-2
+          dependentTasks:
+          - evaluate-op
+          - get-production-metric-op
+          - train-op
+          inputs:
+            artifacts:
+              pipelinechannel--train-op-metrics:
+                taskOutputArtifact:
+                  outputArtifactKey: metrics
+                  producerTask: train-op
+              pipelinechannel--train-op-model:
+                taskOutputArtifact:
+                  outputArtifactKey: model
+                  producerTask: train-op
+            parameters:
+              pipelinechannel--evaluate-op-Output:
+                taskOutputParameter:
+                  outputParameterKey: Output
+                  producerTask: evaluate-op
+              pipelinechannel--get-production-metric-op-Output:
+                taskOutputParameter:
+                  outputParameterKey: Output
+                  producerTask: get-production-metric-op
+              pipelinechannel--validate-data-op-Output:
+                componentInputParameter: pipelinechannel--validate-data-op-Output
+          taskInfo:
+            name: new-model-is-better
+          triggerPolicy:
+            condition: inputs.parameter_values['pipelinechannel--evaluate-op-Output']
+              > inputs.parameter_values['pipelinechannel--get-production-metric-op-Output']
+        evaluate-op:
+          cachingOptions:
+            enableCache: true
+          componentRef:
+            name: comp-evaluate-op
+          dependentTasks:
+          - train-op
+          inputs:
+            artifacts:
+              metrics:
+                taskOutputArtifact:
+                  outputArtifactKey: metrics
+                  producerTask: train-op
+          taskInfo:
+            name: evaluate-op
+        get-production-metric-op:
+          cachingOptions:
+            enableCache: true
+          componentRef:
+            name: comp-get-production-metric-op
+          taskInfo:
+            name: get-production-metric-op
+        save-reference-data-op:
+          cachingOptions:
+            enableCache: true
+          componentRef:
+            name: comp-save-reference-data-op
+          dependentTasks:
+          - train-op
+          inputs:
+            artifacts:
+              data:
+                componentInputArtifact: pipelinechannel--generate-data-op-data
+              model:
+                taskOutputArtifact:
+                  outputArtifactKey: model
+                  producerTask: train-op
+          taskInfo:
+            name: save-reference-data-op
+        train-op:
+          cachingOptions:
+            enableCache: true
+          componentRef:
+            name: comp-train-op
+          inputs:
+            artifacts:
+              data:
+                componentInputArtifact: pipelinechannel--generate-data-op-data
+          taskInfo:
+            name: train-op
+    inputDefinitions:
+      artifacts:
+        pipelinechannel--generate-data-op-data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+      parameters:
+        pipelinechannel--validate-data-op-Output:
+          parameterType: BOOLEAN
+  comp-condition-2:
+    dag:
+      tasks:
+        promote-model-op:
+          cachingOptions:
+            enableCache: true
+          componentRef:
+            name: comp-promote-model-op
+          inputs:
+            artifacts:
+              metrics:
+                componentInputArtifact: pipelinechannel--train-op-metrics
+              model:
+                componentInputArtifact: pipelinechannel--train-op-model
+          taskInfo:
+            name: promote-model-op
+    inputDefinitions:
+      artifacts:
+        pipelinechannel--train-op-metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+        pipelinechannel--train-op-model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+      parameters:
+        pipelinechannel--evaluate-op-Output:
+          parameterType: NUMBER_DOUBLE
+        pipelinechannel--get-production-metric-op-Output:
+          parameterType: NUMBER_DOUBLE
+        pipelinechannel--validate-data-op-Output:
+          parameterType: BOOLEAN
+  comp-evaluate-op:
+    executorLabel: exec-evaluate-op
+    inputDefinitions:
+      artifacts:
+        metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_DOUBLE
+  comp-generate-data-op:
+    executorLabel: exec-generate-data-op
+    outputDefinitions:
+      artifacts:
+        data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-get-production-metric-op:
+    executorLabel: exec-get-production-metric-op
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_DOUBLE
+  comp-promote-model-op:
+    executorLabel: exec-promote-model-op
+    inputDefinitions:
+      artifacts:
+        metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+  comp-save-reference-data-op:
+    executorLabel: exec-save-reference-data-op
+    inputDefinitions:
+      artifacts:
+        data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+  comp-train-op:
+    executorLabel: exec-train-op
+    inputDefinitions:
+      artifacts:
+        data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+  comp-validate-data-op:
+    executorLabel: exec-validate-data-op
+    inputDefinitions:
+      artifacts:
+        data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: BOOLEAN
+deploymentSpec:
+  executors:
+    exec-evaluate-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - evaluate_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef evaluate_op(metrics: Input[Metrics]) -> float:\n    import json\n\
+          \    with open(metrics.path) as f:\n        m = json.load(f)\n    for metric\
+          \ in m[\"metrics\"]:\n        if metric[\"name\"] == \"auc\":\n        \
+          \    print(f\"AUC: {metric['numberValue']:.4f}\")\n            return float(metric[\"\
+          numberValue\"])\n    raise ValueError(\"AUC not found\")\n\n"
+        image: python:3.9
+    exec-generate-data-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - generate_data_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef generate_data_op(data: Output[Dataset]):\n    import boto3, shutil\n\
+          \    LOCAL = \"/tmp/churn_data.csv\"\n    s3 = boto3.client(\n        \"\
+          s3\",\n        endpoint_url=\"http://minio-service.kubeflow:9000\",\n  \
+          \      aws_access_key_id=\"minio\",\n        aws_secret_access_key=\"minio123\"\
+          ,\n    )\n    s3.download_file(\"mlpipeline\", \"churn/data/churn_data.csv\"\
+          , LOCAL)\n    shutil.copy(LOCAL, data.path)\n    print(f\"Data written to\
+          \ artifact: {data.path}\")\n\n"
+        image: crysis307/churn-train:v14
+    exec-get-production-metric-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - get_production_metric_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef get_production_metric_op() -> float:\n    import boto3, json\n\
+          \    from botocore.exceptions import ClientError\n    FALLBACK = 0.60\n\
+          \    try:\n        s3 = boto3.client(\n            \"s3\",\n           \
+          \ endpoint_url=\"http://minio-service.kubeflow:9000\",\n            aws_access_key_id=\"\
+          minio\",\n            aws_secret_access_key=\"minio123\",\n        )\n \
+          \       obj = s3.get_object(Bucket=\"mlpipeline\", Key=\"churn/production/metrics.json\"\
+          )\n        m = json.loads(obj[\"Body\"].read())\n        for metric in m[\"\
+          metrics\"]:\n            if metric[\"name\"] == \"auc\":\n             \
+          \   return float(metric[\"numberValue\"])\n    except ClientError as e:\n\
+          \        if e.response[\"Error\"][\"Code\"] in (\"NoSuchKey\", \"404\"):\n\
+          \            return FALLBACK\n        raise\n    return FALLBACK\n\n"
+        image: crysis307/churn-train:v14
+    exec-promote-model-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - promote_model_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef promote_model_op(model: Input[Model], metrics: Input[Metrics]):\n\
+          \    import boto3\n    s3 = boto3.client(\n        \"s3\",\n        endpoint_url=\"\
+          http://minio-service.kubeflow:9000\",\n        aws_access_key_id=\"minio\"\
+          ,\n        aws_secret_access_key=\"minio123\",\n    )\n    s3.upload_file(model.path,\
+          \ \"mlpipeline\", \"churn/production/model.pkl\")\n    s3.upload_file(metrics.path,\
+          \ \"mlpipeline\", \"churn/production/metrics.json\")\n    print(\"Model\
+          \ and metrics promoted to production path\")\n\n"
+        image: crysis307/churn-train:v14
+    exec-save-reference-data-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - save_reference_data_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef save_reference_data_op(data: Input[Dataset], model: Input[Model]):\n\
+          \    \"\"\"\n    Save the training data + model predictions to MinIO as\
+          \ parquet.\n    This becomes the REFERENCE DATASET for drift_detector.py.\n\
+          \n    Why we save predictions alongside features:\n      Drift detection\
+          \ needs both to detect concept drift.\n      Without predictions in the\
+          \ reference, we can only detect data drift.\n      With predictions, we\
+          \ can also detect when the model's output\n      distribution shifts (concept\
+          \ drift proxy).\n\n    What gets saved:\n      All input features + churn_probability\
+          \ (model's prediction on\n      the training set). The test split is used,\
+          \ not the train split,\n      because the model hasn't seen it \u2014 more\
+          \ representative of\n      what production predictions will look like.\n\
+          \    \"\"\"\n    import io\n    import pickle\n    import boto3\n    import\
+          \ pandas as pd\n    from sklearn.model_selection import train_test_split\n\
+          \n    # Load training data\n    df = pd.read_csv(data.path)\n    FEATURES\
+          \ = ['age', 'tenure_months', 'monthly_charges',\n                'total_charges',\
+          \ 'num_support_calls']\n\n    X = df[FEATURES]\n    y = df['churn']\n\n\
+          \    # Same split as train.py \u2014 same random_state \u2192 same test\
+          \ set\n    _, X_test, _, _ = train_test_split(\n        X, y, test_size=0.2,\
+          \ random_state=42, stratify=y\n    )\n\n    # Load model and predict on\
+          \ test set\n    with open(model.path, 'rb') as f:\n        clf = pickle.load(f)\n\
+          \n    test_proba = clf.predict_proba(X_test)[:, 1]\n\n    # Build reference\
+          \ DataFrame: features + predictions\n    reference_df = X_test.copy().reset_index(drop=True)\n\
+          \    reference_df['churn_probability'] = test_proba\n    reference_df['split']\
+          \ = 'test'\n\n    print(f\"Reference dataset: {reference_df.shape}\")\n\
+          \    print(f\"  churn_probability mean: {test_proba.mean():.4f}\")\n   \
+          \ print(f\"  churn_probability std:  {test_proba.std():.4f}\")\n\n    #\
+          \ Upload to MinIO as parquet\n    s3 = boto3.client(\n        \"s3\",\n\
+          \        endpoint_url=\"http://minio-service.kubeflow:9000\",\n        aws_access_key_id=\"\
+          minio\",\n        aws_secret_access_key=\"minio123\",\n    )\n\n    buf\
+          \ = io.BytesIO()\n    reference_df.to_parquet(buf, index=False)\n    buf.seek(0)\n\
+          \n    s3.put_object(\n        Bucket=\"mlpipeline\",\n        Key=\"churn/drift/reference_data.parquet\"\
+          ,\n        Body=buf.getvalue(),\n    )\n    print(\"Reference data saved\
+          \ \u2192 s3://mlpipeline/churn/drift/reference_data.parquet\")\n    print(\"\
+          drift_detector.py will use this as the baseline for future drift checks.\"\
+          )\n\n"
+        image: crysis307/churn-train:v14
+    exec-train-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - train_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef train_op(\n        data: Input[Dataset],\n        model: Output[Model],\n\
+          \        metrics: Output[Metrics],\n):\n    import subprocess, sys\n   \
+          \ result = subprocess.run(\n        [sys.executable, \"/app/training/train.py\"\
+          ,\n         data.path, model.path, metrics.path],\n        capture_output=True,\
+          \ text=True,\n    )\n    print(result.stdout)\n    if result.returncode\
+          \ != 0:\n        raise RuntimeError(f\"Training failed:\\n{result.stderr}\"\
+          )\n\n"
+        image: crysis307/churn-train:v14
+    exec-validate-data-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - validate_data_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.14.3'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef validate_data_op(data: Input[Dataset]) -> bool:\n    import pandas\
+          \ as pd\n    df = pd.read_csv(data.path)\n    required = ['age', 'tenure_months',\
+          \ 'monthly_charges',\n                'total_charges', 'num_support_calls',\
+          \ 'churn']\n    if len(df) < 100: return False\n    if df.isnull().sum().sum()\
+          \ > 0: return False\n    for col in required:\n        if col not in df.columns:\
+          \ return False\n    print(f\"Validated: {df.shape}\")\n    return True\n\
+          \n"
+        image: crysis307/churn-train:v14
+pipelineInfo:
+  description: "Generate \u2192 Validate \u2192 Train \u2192 Evaluate \u2192 Promote\
+    \ \u2192 Save Reference"
+  name: churn-train-pipeline
+root:
+  dag:
+    tasks:
+      condition-1:
+        componentRef:
+          name: comp-condition-1
+        dependentTasks:
+        - generate-data-op
+        - validate-data-op
+        inputs:
+          artifacts:
+            pipelinechannel--generate-data-op-data:
+              taskOutputArtifact:
+                outputArtifactKey: data
+                producerTask: generate-data-op
+          parameters:
+            pipelinechannel--validate-data-op-Output:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: validate-data-op
+        taskInfo:
+          name: data-is-valid
+        triggerPolicy:
+          condition: inputs.parameter_values['pipelinechannel--validate-data-op-Output']
+            == true
+      generate-data-op:
+        cachingOptions: {}
+        componentRef:
+          name: comp-generate-data-op
+        taskInfo:
+          name: generate-data-op
+      validate-data-op:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-validate-data-op
+        dependentTasks:
+        - generate-data-op
+        inputs:
+          artifacts:
+            data:
+              taskOutputArtifact:
+                outputArtifactKey: data
+                producerTask: generate-data-op
+        taskInfo:
+          name: validate-data-op
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.14.3

@@ -166,7 +166,12 @@ else
   ok "Prometheus stack installed"
 fi
 
+log "Applying PrometheusRules (promRules.yml and drift_promRule.yml)..."
+kubectl apply -f "$SCRIPT_DIR/promRules.yml"
+kubectl apply -f "$SCRIPT_DIR/drift_promRule.yml"
+
 log "Waiting for Prometheus pod..."
+
 kubectl wait --for=condition=Ready pod \
   -l app.kubernetes.io/name=prometheus \
   -n monitoring \

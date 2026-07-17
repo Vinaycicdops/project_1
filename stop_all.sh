@@ -13,8 +13,21 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RESET='\033[0m'; BOLD
 
 echo -e "${YELLOW}${BOLD}Stopping all MLOps/AIOps services...${RESET}"
 
+# Terminate all WSL port-forwards
+echo -e "  ${RED}↓ Stopping all kubectl port-forwards${RESET}"
+pkill -f "kubectl port-forward" 2>/dev/null || true
+
+# Clean up completed workflows and pods in kubeflow namespace
+echo -e "  ${RED}↓ Cleaning up completed workflows and pods in kubeflow namespace${RESET}"
+kubectl delete workflow -n kubeflow --all 2>/dev/null || true
+
+
+# Terminate any running AIOps Ensemble engines
+echo -e "  ${RED}↓ Stopping all AIOps Ensemble engines${RESET}"
+pkill -f "Ensemble_engine.py" 2>/dev/null || true
+
 if [ ! -f "$PID_FILE" ]; then
-  echo -e "${YELLOW}No .pids file found — nothing to stop (maybe nothing is running).${RESET}"
+  echo -e "${YELLOW}No .pids file found — nothing else to stop.${RESET}"
   exit 0
 fi
 

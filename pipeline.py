@@ -232,7 +232,47 @@ def churn_pipeline():
 
 
 def run_pipeline():
+    import time
+    from datetime import datetime
+    from kfp import compiler
+
     client = kfp.Client(host="http://127.0.0.1:8080")
+
+    # Compile the pipeline
+    package_path = "churn_pipeline.yaml"
+    print(f"Compiling pipeline to {package_path}...")
+    compiler.Compiler().compile(
+        pipeline_func=churn_pipeline,
+        package_path=package_path
+    )
+
+    # Register/Upload pipeline template to KFP
+    try:
+        pipelines = client.list_pipelines(page_size=100)
+        pipeline_id = None
+        for p in pipelines.pipelines or []:
+            if p.display_name == "churn-train-pipeline" or p.name == "churn-train-pipeline":
+                pipeline_id = p.pipeline_id
+                break
+        
+        if pipeline_id:
+            version_name = f"ver-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            print(f"Pipeline 'churn-train-pipeline' already registered (ID: {pipeline_id}). Uploading version {version_name}...")
+            client.upload_pipeline_version(
+                pipeline_package_path=package_path,
+                pipeline_version_name=version_name,
+                pipeline_id=pipeline_id
+            )
+        else:
+            print("Uploading new pipeline template 'churn-train-pipeline'...")
+            client.upload_pipeline(
+                pipeline_package_path=package_path,
+                pipeline_name="churn-train-pipeline"
+            )
+    except Exception as e:
+        print(f"Pipeline registration failed: {e}")
+
+    # Submit one-shot run
     run = client.create_run_from_pipeline_func(
         churn_pipeline,
         arguments={},

@@ -331,7 +331,6 @@ def live_loop(ensemble: EnsembleDetector, client: PrometheusClient):
             ts       = time.strftime("%Y-%m-%d %H:%M:%S")
             snap     = client.fetch_snapshot()
             result   = ensemble.predict(snap)
-            result   = ensemble.predict(snap)
             print(f"  DEBUG: voting={result['voting']} n_anomaly={result['n_anomaly_votes']} n_total={result['n_votes']} verdict={result['verdict']} sev={result['severity']}")  # ← add this
             verdict  = result["verdict"]
             sev      = result["severity"]
